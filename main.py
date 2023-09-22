@@ -1,4 +1,5 @@
 from datetime import date
+from typing import Optional
 
 from fastapi import FastAPI, Depends
 from fastapi.responses import JSONResponse
@@ -6,7 +7,7 @@ from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from utils import *
-from models import Base, User, Booking, AuthToken
+from models import Base, User, Booking
 
 DATABASE_URL = 'postgresql://postgres:123@localhost/cyberapi'
 reuseable_oauth = OAuth2PasswordBearer(
@@ -63,6 +64,31 @@ def create_user(name: str, password: str):
     )
 
 
+@app.post("/refresh_token", summary="Refresh JWT access token")
+def refresh_token(token: str):
+    token = decodeJWT(token)
+    if not token:
+        return JSONResponse(
+            status_code=400, content={"status_code": 400, "message": "Invalid token"}
+        )
+    if token['exp'] < time.time():
+        return JSONResponse(
+            status_code=400, content={"status_code": 400, "message": "Token expired"}
+        )
+    session = Session()
+    user = session.query(User).filter_by(username=token['sub']['refresh_for']).first()
+    session.close()
+    if not user:
+        return JSONResponse(
+            status_code=400, content={"status_code": 400, "message": "User not found"}
+        )
+    return JSONResponse(
+        status_code=200, content={"status_code": 200, "message": "Token refreshed",
+                                  "access_token": create_access_token(user.username),
+                                  "refresh_token": create_refresh_token(user.username)}
+    )
+
+
 @app.post('/login', summary="Get JWT access token for the specified user")
 def login_user(form_data: OAuth2PasswordRequestForm = Depends()):
     session = Session()
@@ -76,15 +102,10 @@ def login_user(form_data: OAuth2PasswordRequestForm = Depends()):
         return JSONResponse(
             status_code=400, content={"status_code": 400, "message": "Incorrect login details"}
         )
-    access_token = create_access_token(user.username)
-    refresh_token = create_refresh_token(user.username)
-    session.add(AuthToken(user_id=user.id, access_token=access_token, refresh_token=refresh_token))
-    session.commit()
-    session.close()
     return JSONResponse(
         status_code=200, content={"status_code": 200, "message": "Logged in",
-                                  "access_token": access_token,
-                                  "refresh_token": refresh_token}
+                                  "access_token": create_access_token(user.username),
+                                  "refresh_token": create_refresh_token(user.username)}
     )
 
 
@@ -103,19 +124,50 @@ async def get_current_user(request: Request):
     )
 
 
-@app.delete("/delete/{user_id}")
-def delete_user(user_id: int):
+@app.delete("/delete_user", dependencies=[Depends(JWTBearer())], summary="Delete user")
+def delete_user(request: Request):
     session = Session()
-    user = session.query(User).get(user_id)
+    user = session.query(User).filter_by(
+        username=decodeJWT(request.headers.get("Authorization").split(' ')[1])['sub']).first()
     if not user:
         return JSONResponse(
-            status_code=404, content={"status_code": 404, "message": "user not found"}
+            status_code=400, content={"status_code": 400, "message": "user not found"}
         )
     session.delete(user)
     session.commit()
     session.close()
     return JSONResponse(
         status_code=200, content={"status_code": 200, "message": "user deleted"}
+    )
+
+
+from datetime import datetime
+
+
+@app.post("/create_booking", dependencies=[Depends(JWTBearer())], summary="Create booking")
+def create_booking(request: Request, start_time: str, end_time: str, comment: Optional[str] = None):
+    session = Session()
+    user = session.query(User).filter_by(
+        username=decodeJWT(request.headers.get("Authorization").split(' ')[1])['sub']).first()
+    if not user:
+        return JSONResponse(
+            status_code=400, content={"status_code": 400, "message": "user not found"}
+        )
+
+    try:
+        start_datetime = datetime.strptime(start_time, "%d-%m-%Y %H:%M:%S")
+        end_datetime = datetime.strptime(end_time, "%d-%m-%Y %H:%M:%S")
+    except ValueError:
+        return JSONResponse(
+            status_code=400, content={"status_code": 400, "message": "invalid time format"}
+        )
+    booking = Booking(user_id=user.id, start_time=start_datetime, end_time=end_datetime, comment=comment)
+    session.add(booking)
+    session.commit()
+    session.close()
+    return JSONResponse(
+        status_code=200,
+        content={"status_code": 200, "message": "booking created", "booking_id": booking.id, "user_id": booking.user_id}
     )
 
 
