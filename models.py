@@ -17,3 +17,10 @@ class Booking(Base):
     start_time = Column(Date)
     end_time = Column(Date)
     comment = Column(String)
+
+class AuthToken(Base):
+    __tablename__ = "auth_tokens"
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer)
+    access_token = Column(String)
+    refresh_token = Column(String)
