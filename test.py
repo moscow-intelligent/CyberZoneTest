@@ -5,6 +5,7 @@ from main import app
 client = TestClient(app)
 access_token = ""
 refresh_token = ""
+booking_id = 0
 
 
 def test_frontpage():
@@ -34,6 +35,7 @@ def test_register():
     response = response.json()
     assert response["status_code"] == 200
 
+
 def test_login():
     global access_token, refresh_token
     response = client.post(
@@ -58,24 +60,47 @@ def test_userinfo():
     assert response["user"]["username"] == "test"
     assert response["user"]["created_at"] == response["user"]["modified_at"]
 
+def test_refresh_token():
+    global access_token, refresh_token
+    response = client.post(f"/refresh_token?token={refresh_token}")
+    assert response.status_code == 200
+    response = response.json()
+    assert response["status_code"] == 200
+    access_token = response["access_token"]
+    refresh_token = response["refresh_token"]
 
 def test_booking():
+    global booking_id
     response = client.post(
-        "/create_booking?start_time=2022-01-01%2000:00:00&end_time=2022-01-01%2001:00:00&comment=test",
+        "/create_booking?start_time=01-09-2023%2000:00:00&end_time=01-09-2023%2001:00:00&comment=1",
         headers={"Authorization": f"Bearer {access_token}"},
     )
     assert response.status_code == 200
     response = response.json()
     assert response["status_code"] == 200
     booking_id = response["booking_id"]
-    response = client.get("/get_bookings")
+    response = client.get("/get_bookings",
+                          headers={"Authorization": f"Bearer {access_token}"}, )
     assert response.status_code == 200
     response = response.json()
     assert response["status_code"] == 200
     assert len(response["bookings"]) == 1
     assert response["bookings"][0]["id"] == booking_id
-    assert response["bookings"][0]["start_time"] == "2022-01-01 00:00:00"
-    assert response["bookings"][0]["end_time"] == "2022-01-01 01:00:00"
-    assert response["bookings"]["comment"] == "test"
+    assert response["bookings"][0]["start_time"] == "01-09-2023 00:00:00"
+    assert response["bookings"][0]["end_time"] == "01-09-2023 01:00:00"
+    assert response["bookings"][0]["comment"] == "1"
 
 
+def test_delete_booking():
+    response = client.delete(f"/remove_booking/{booking_id}", headers={"Authorization": f"Bearer {access_token}"})
+    assert response.status_code == 200
+    response = client.get("/get_bookings", headers={"Authorization": f"Bearer {access_token}"})
+    assert response.status_code == 200
+    response = response.json()
+    assert response["status_code"] == 200
+    assert len(response["bookings"]) == 0
+
+
+def test_delete_user():
+    response = client.delete("/delete_user", headers={"Authorization": f"Bearer {access_token}"})
+    assert response.status_code == 200

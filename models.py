@@ -25,7 +25,7 @@ class Booking(Base):
         return {
             "id": self.id,
             "user_id": self.user_id,
-            "start_time": str(self.start_time),
-            "end_time": str(self.end_time),
+            "start_time": str(self.start_time.strftime("%d-%m-%Y %H:%M:%S")),
+            "end_time": str(self.end_time.strftime("%d-%m-%Y %H:%M:%S")),
             "comment": self.comment
         }
