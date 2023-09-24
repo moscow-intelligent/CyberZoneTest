@@ -196,7 +196,8 @@ async def delete_user(request: Request):
 
 
 @app.post("/create_booking", dependencies=[Depends(JWTBearer())], summary="Create booking")
-async def create_booking(request: Request, start_time: str, end_time: str, comment: Optional[str] = None) -> JSONResponse:
+async def create_booking(request: Request, start_time: str, end_time: str,
+                         comment: Optional[str] = None) -> JSONResponse:
     """
     Create a booking with the given start time, end time, and optional comment.
 
@@ -270,6 +271,40 @@ async def create_booking(request: Request, start_time: str, end_time: str, comme
             "message": "booking created",
             "booking_id": new_booking.id
         }
+    )
+
+
+@app.patch("/update_user", dependencies=[Depends(JWTBearer())], summary="Update user")
+async def update_user_information(request: Request, name: Optional[str] = None, password: Optional[str] = None):
+    """
+    Update user information.
+
+    Parameters:
+        - request (Request): The HTTP request object.
+        - name (Optional[str]): The new name of the user.
+        - password (Optional[str]): The new password of the user.
+
+    Returns:
+        - JSONResponse: The HTTP response object.
+    """
+    session = Session()
+    user = session.query(User).filter_by(
+        username=decodeJWT(request.headers.get("Authorization").split(' ')[1])['sub']).first()
+    if not user:
+        return JSONResponse(
+            status_code=404, content={"status_code": 404, "message": "user not found"}
+        )
+    if name:
+        user.name = name
+    if password:
+        user.password = get_hashed_password(password)
+    user.updated_at = date.today()
+    # TODO: доделать
+    session.query(User).filter_by(id=user.id).update()
+    session.commit()
+    session.close()
+    return JSONResponse(
+        status_code=200, content={"status_code": 200, "message": "user updated"}
     )
 
 

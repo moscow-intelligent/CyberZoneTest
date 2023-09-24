@@ -60,6 +60,7 @@ def test_userinfo():
     assert response["user"]["username"] == "test"
     assert response["user"]["created_at"] == response["user"]["modified_at"]
 
+
 def test_refresh_token():
     global access_token, refresh_token
     response = client.post(f"/refresh_token?token={refresh_token}")
@@ -68,6 +69,7 @@ def test_refresh_token():
     assert response["status_code"] == 200
     access_token = response["access_token"]
     refresh_token = response["refresh_token"]
+
 
 def test_booking():
     global booking_id
@@ -89,6 +91,14 @@ def test_booking():
     assert response["bookings"][0]["start_time"] == "01-09-2023 00:00:00"
     assert response["bookings"][0]["end_time"] == "01-09-2023 01:00:00"
     assert response["bookings"][0]["comment"] == "1"
+
+
+def test_user_edit():
+    response = client.patch("/update_user?username=test1&password=test1",
+                            headers={"Authorization": f"Bearer {access_token}"})
+    assert response.status_code == 200
+    response = response.json()
+    assert response["status_code"] == 200
 
 
 def test_delete_booking():
