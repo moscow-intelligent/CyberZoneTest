@@ -23,12 +23,20 @@ CRUD с проверкой данных и контейнеризацией че
 <br>
 `psql --command "CREATE DATABASE cyberapi WITH OWNER cyberuser;"`
 <br>
+Изменить переменную `DATABASE_URL` на `DATABASE_URL = 'postgresql://cyberuser:cyberpassword@localhost/cyberapi'`
+<br>
 `uvicorn main:app --host 0.0.0.0 --port 8000`
 <br>
 
 ## Через docker
-Later...
+`git clone https://github.com/moscow-intelligent/CyberZoneTest`
+<br>
+`cd CyberZoneTest`
+<br>
+`docker-compose build`
+<br>
+`docker-compose up`
 
-Документация доступна по [ссылке](localhost:8000/docs) после развертывания проекта
+Документация доступна по ссылке https://localhost:8000/docs после развертывания проекта
 
 

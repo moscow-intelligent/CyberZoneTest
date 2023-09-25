@@ -8,7 +8,7 @@ from sqlalchemy.orm import sessionmaker
 from utils import *
 from models import Base, User, Booking
 
-DATABASE_URL = 'postgresql://cyberapi:cyberpassword@localhost/cyberapi'
+DATABASE_URL = 'postgresql://cyberuser:cyberpassword@db/cyberapi'
 reuseable_oauth = OAuth2PasswordBearer(
     tokenUrl="/login",
     scheme_name="JWT"

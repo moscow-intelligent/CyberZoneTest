@@ -18,13 +18,15 @@ ENV POSTGRES_USER=cyberuser
 ENV POSTGRES_PASSWORD=cyberpassword
 ENV POSTGRES_DB=cyberapi
 
-# Install PostgreSQL client
-RUN apt-get update && apt-get install -y postgresql-client
+# Install PostgreSQL
+RUN apt-get update && apt-get install -y postgresql
 
-# Run the PostgreSQL container
-RUN service postgresql start && \
-    psql --command "CREATE USER $POSTGRES_USER WITH PASSWORD '$POSTGRES_PASSWORD';" && \
-    psql --command "CREATE DATABASE $POSTGRES_DB WITH OWNER $POSTGRES_USER;"
+# Start the PostgreSQL service
+RUN service postgresql start
+
+## Create the user and database
+#RUN su - postgres -c "psql --command \"CREATE USER $POSTGRES_USER WITH PASSWORD '$POSTGRES_PASSWORD';\""
+#RUN su - postgres -c "psql --command \"CREATE DATABASE $POSTGRES_DB WITH OWNER $POSTGRES_USER;\""
 
 # Expose the port for the FastAPI application
 EXPOSE 8000

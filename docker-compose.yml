@@ -1,0 +1,28 @@
+version: '3'
+
+services:
+  db:
+    image: postgres:13
+    restart: always
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_DB: cyberapi
+      POSTGRES_USER: cyberuser
+      POSTGRES_PASSWORD: cyberpassword
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - 8000:8000
+    depends_on:
+      - db
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: cyberapi
+      DB_USER: cyberuser
+      DB_PASSWORD: cyberpassword
