@@ -8,7 +8,7 @@ from sqlalchemy.orm import sessionmaker
 from utils import *
 from models import Base, User, Booking
 
-DATABASE_URL = 'postgresql://postgres:123@localhost/cyberapi'
+DATABASE_URL = 'postgresql://cyberapi:cyberpassword@localhost/cyberapi'
 reuseable_oauth = OAuth2PasswordBearer(
     tokenUrl="/login",
     scheme_name="JWT"
@@ -295,16 +295,17 @@ async def update_user_information(request: Request, name: Optional[str] = None, 
             status_code=404, content={"status_code": 404, "message": "user not found"}
         )
     if name:
-        user.name = name
+        user.username = name
     if password:
         user.password = get_hashed_password(password)
     user.updated_at = date.today()
-    # TODO: доделать
-    session.query(User).filter_by(id=user.id).update()
+    name = user.username
     session.commit()
     session.close()
     return JSONResponse(
-        status_code=200, content={"status_code": 200, "message": "user updated"}
+        status_code=200, content={"status_code": 200, "message": "user updated",
+                                  "access_token": create_access_token(name),
+                                  "refresh_token": create_refresh_token(name)}
     )
 
 
