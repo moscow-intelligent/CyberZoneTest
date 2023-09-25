@@ -9,7 +9,7 @@ CRUD с проверкой данных и контейнеризацией че
 # Способы запуска
 
 ## Через git
-`git clone https://github.com/moscow-intelligent/CyberZoneTest`
+`git clone https://github.com/moscow-intelligent/CyberZoneTest.git`
 <br>
 `cd CyberZoneTest`
 <br>
@@ -29,7 +29,7 @@ CRUD с проверкой данных и контейнеризацией че
 <br>
 
 ## Через docker
-`git clone https://github.com/moscow-intelligent/CyberZoneTest`
+`git clone https://github.com/moscow-intelligent/CyberZoneTest.git`
 <br>
 `cd CyberZoneTest`
 <br>
